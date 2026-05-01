@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK Auto Analyzer Pro</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // DATA & CONFIG (Source: Ton code initial)
+        const PRIX_MOTEUR = { super:150, bon:350, correct:600, cher:900, max:1300 };
+        const KM_MOTEUR = { top:60000, bon:100000, ok:150000, limite:200000 };
+        const REVENTE = 3800;
+
+        // STYLES APPLE (Source: Nouveau prompt)
+        const styles = `
+            :root { --bg: #F5F5F7; --card: #FFFFFF; --text: #1D1D1F; --accent: #0071E3; }
+            body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; }
+            .app-wrap { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+            .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+            .pill-nav { display: flex; gap: 10px; margin-bottom: 20px; }
+            .pill { padding: 8px 16px; border-radius: 20px; border: none; background: #E8E8ED; cursor: pointer; }
+            .pill.active { background: var(--accent); color: white; }
+            input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #D2D2D7; margin-top: 10px; box-sizing: border-box; }
+            .btn { background: var(--accent); color: white; border: none; border-radius: 20px; padding: 10px 20px; margin-top: 20px; width: 100%; cursor: pointer; }
+        `;
+
+        function App() {
+            const [page, setPage] = useState("dashboard");
+            const [annonces, setAnnonces] = useState([]);
+            const [form, setForm] = useState({ titre: "", prix: "", km: "", vendeur: "particulier" });
+
+            const calculateScore = (a) => {
+                let s = 100;
+                if (a.prix > PRIX_MOTEUR.cher) s -= 25;
+                if (a.km > KM_MOTEUR.ok) s -= 20;
+                return s;
+            };
+
+            const addAnnonce = () => {
+                setAnnonces([...annonces, { ...form, id: Date.now() }]);
+                setPage("liste");
+            };
+
+            return (
+                <div className="app-wrap">
+                    <style>{styles}</style>
+                    <header>
+                        <h1>SK Auto <span style={{color:'#86868B'}}>Pro</span></h1>
+                        <div className="pill-nav">
+                            <button className={`pill ${page==='dashboard'?'active':''}`} onClick={()=>setPage('dashboard')}>Stats</button>
+                            <button className={`pill ${page==='ajouter'?'active':''}`} onClick={()=>setPage('ajouter')}>Ajouter</button>
+                            <button className={`pill ${page==='sourcing'?'active':''}`} onClick={()=>setPage('sourcing')}>Sourcing</button>
+                            <button className={`pill ${page==='liste'?'active':''}`} onClick={()=>setPage('liste')}>Liste</button>
+                        </div>
+                    </header>
+
+                    {page === "ajouter" && (
+                        <div className="card">
+                            <h3>Nouvelle Analyse</h3>
+                            <input placeholder="Titre" onChange={e=>setForm({...form, titre:e.target.value})} />
+                            <input type="number" placeholder="Prix (€)" onChange={e=>setForm({...form, prix:e.target.value})} />
+                            <input type="number" placeholder="KM" onChange={e=>setForm({...form, km:e.target.value})} />
+                            <button className="btn" onClick={addAnnonce}>Analyser</button>
+                        </div>
+                    )}
+
+                    {page === "liste" && (
+                        <div>
+                            {annonces.map(a => (
+                                <div className="card" key={a.id}>
+                                    <strong>{a.titre}</strong> - {a.prix}€ ({calculateScore(a)}/100)
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {page === "sourcing" && (
+                        <div className="card">
+                            <h2>Smart Sourcing</h2>
+                            <p>Analyse automatique des meilleures annonces en cours...</p>
+                            {annonces.length > 0 ? (
+                                <div style={{padding:10, background:'#F5F9FF', borderRadius:8}}>
+                                    Meilleure offre : {annonces.sort((a,b)=>calculateScore(b)-calculateScore(a))[0].titre}
+                                </div>
+                            ) : "Aucune donnée"}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
